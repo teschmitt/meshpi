@@ -1,0 +1,4 @@
+# Project specific files and folders
+pi_config/userconf
+pi_config/wpa_supplicant.conf
+dtn7-*/

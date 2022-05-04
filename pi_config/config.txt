@@ -1,0 +1,21 @@
+################################ UAV Pi Config Section ################################
+# see all options: https://www.raspberrypi.com/documentation/computers/config_txt.html
+
+
+# HDMI output will be switched off and blanked - good for power conservation I hope
+hdmi_blanking=1
+enable_tvout=0
+
+# don't load useless overlays
+camera_auto_detect=0
+display_auto_detect=0
+dtparam=audio=off
+dtoverlay=
+
+# switch off LEDs
+dtparam=act_led_trigger=none
+dtparam=act_led_activelow=on
+
+disable_splash=1
+
+#######################################################################################
