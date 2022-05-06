@@ -1,4 +1,6 @@
 # UAVPi image build workflow
+
+### Prerequisites
 Building a deployable UAVPi image is aided by the scripts and pre-defined config files in this repository. There are a few prerequesites for starting this workflow:
 
 1. Download a suitable vanilla Raspi OS image, e.g. [2022-04-04-raspios-bullseye-armhf-lite](https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2022-04-07/2022-04-04-raspios-bullseye-armhf-lite.img.xz.torrent)
@@ -15,13 +17,14 @@ $ git clone git@github.com:teschmitt/UAVPi.git
 $ cd UAVPi
 ```
 
-4. Edit `userconf_sample` in order to set up a custom default user. Generate the password
+4. Edit `pi_config/userconf_sample` in order to set up a custom default user. Generate the password hash with
+
 ```shell
 $ openssl passwd -6
   [ ... enter password ...]
 ```
 
-then save the output to `userconf`:
+then save the output to `pi_config/userconf`:
 
 ```
 <username>:<PASSWORDHASH>
@@ -59,7 +62,7 @@ In order to install all needed software, run
 $ ./setup_host.sh
 ```
 
-This may take a while. When it's done you should see
+This requires an internet connection and may take a while. When it's done you should see
 
 ```
 Setup finished, you can now run the setup_mesh.sh script.
@@ -74,13 +77,19 @@ $ ./setup_mesh.sh
 This will actually muck around in the network configurations and set up all interfaces needed by `batman-adv`. If you want to change any of the used options, check the `networking` directory for the appropriate files.
 
 ## Create and shrink an image
-Now for the most important part: creating the image:
+Now for the most important part, creating the image:
 
 1. Power down the Pi and remove the SD card. Mount it on the workstation
-2. Fire up the `create_image.sh` script (this will also require your `sudo` credentials, so have those handy):
+2. Find out the device ID like above
+3. Fire up the `create_image.sh` script (this will also require your `sudo` credentials, so have those handy):
 
 ```shell
 $ ./create_image.sh /dev/sdX imagename.img
 ```
 
 This will take a while, but you'll have a ready to deploy image when it's done.
+
+## On hostnames
+The `setup_mesh.sh` script will generate a hostname based on the MAC address of the `wlan0` interface and write this hostname to `/etc/hosts` and `/etc/hostname`. The image you create will have this hostname hard-coded into it. If you want something more generic you will have to alter the appropriate files before ripping the image.
+
+To auto-generate and set a hostname with the schema `uav-<last 6 MAC addr digits w/o colons>`, simply run the `autogen_hostname.sh` script.
