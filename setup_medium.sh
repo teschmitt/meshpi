@@ -18,7 +18,7 @@ usage() {
 }
 
 skipping() {
-    echo "  -> File $1 not found, skipping"
+    echo "  -> File/directory $1 not found, skipping"
 }
 
 invalid() {
@@ -111,21 +111,18 @@ echo ""
 echo "Copying files for self-hosted setup into user directory"
 userdir="$fs_root/home/$username"
 sudo mkdir "$userdir"
-username=$(whoami)
-cur_group=$(id -gn)
-sudo chown $username:$cur_group "$userdir"
-cp -Rv networking "$userdir"
-cp -v setup_host.sh "$userdir"
-cp -v setup_mesh.sh "$userdir"
+sudo cp -Rv networking "$userdir"
+sudo cp -v setup_host.sh "$userdir"
+sudo cp -v setup_mesh.sh "$userdir"
 
 echo ""
 echo "Copying user dotfiles into user directory"
 if [[ -d "dotfiles" ]]
 then
     cd dotfiles
-    cp -v .bash_logout "$userdir"
-    cp -v .bashrc "$userdir"
-    cp -v .profile "$userdir"
+    sudo cp -v .bash_logout "$userdir"
+    sudo cp -v .bashrc "$userdir"
+    sudo cp -v .profile "$userdir"
 else
     skipping "dotfiles"
 fi
