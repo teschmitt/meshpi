@@ -38,19 +38,21 @@ done
 
 
 # fix owners
-echo ""
-echo "Fixing file owners ..."
-username=$(whoami)
-cur_group=$(id -gn)
-sudo chown $username:$cur_group $0
-[[ -f .bash_logout ]] && sudo chown $username:$cur_group .bash_logout
-[[ -f .bashrc ]] && sudo chown $username:$cur_group .bashrc
-[[ -f .profile ]] && sudo chown $username:$cur_group .profile
-cd networking
-sudo chown $username:$cur_group start-batman-adv.sh
-sudo cp -v start-batman-adv.sh ..
-cd ..
+# echo ""
+# echo "Fixing file owners ..."
+# username=$(whoami)
+# cur_group=$(id -gn)
+# sudo chown $username:$cur_group $0
+# [[ -f .bash_logout ]] && sudo chown $username:$cur_group .bash_logout
+# [[ -f .bashrc ]] && sudo chown $username:$cur_group .bashrc
+# [[ -f .profile ]] && sudo chown $username:$cur_group .profile
+cp -v networking/start-batman-adv.sh .
+# cd "$pwd"
+# sudo chown -R $username:$cur_group .
 
+echo ""
+echo "Setting QWERTZ keyboard layout ..."
+sudo localectl --no-convert set-keymap de-latin1-nodeadkeys
 
 # install software
 echo ""

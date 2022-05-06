@@ -62,14 +62,16 @@ new_hostname="uav-$suffix"
 sudo hostnamectl set-hostname $new_hostname
 sudo hostname $new_hostname
 # sudo sed -i "s/$cur_hostname/$new_hostname/g" /etc/hosts
-sudo sed -i "s/^\(127\.0\.1\.1\s*\)\w*/\1$new_hostname/g" /etc/hosts
+sudo sed -i "s/^\(127\.0\.1\.1\s*\).*/\1$new_hostname/g" /etc/hosts
+sudo sed -i "s/^\(127\.0\.0\.1\s*\).*/\1$new_hostname/g" /etc/hosts
 # sudo sed -i "s/$cur_hostname/$new_hostname/g" /etc/hostname
-sudo echo "$new_hostname" > /etc/hostname
+# sudo echo "$new_hostname" > /etc/hostname
 echo "  -> changed to $new_hostname"
 
 echo ""
-echo "Mesh setup is done. This machine will now reboot and lose connectivity to any"
-echo "wifi network previously defined. Good luck!"
+echo "Mesh setup is done. This machine will now reboot and lose any"
+echo "previously defined wifi connectivity."
+echo "Good luck!"
 
 
 read -s -n 1 -p "Press any key to reboot"
