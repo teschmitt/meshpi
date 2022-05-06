@@ -43,4 +43,10 @@ echo "Shrinking image ..."
 sudo PiShrink/pishrink.sh "$image_name"
 
 echo ""
+echo "Fixing permissions ..."
+username=$(whoami)
+cur_group=$(id -gn)
+sudo chown $username:$cur_group "$image_name"
+
+echo ""
 echo "Success!"

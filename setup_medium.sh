@@ -114,6 +114,7 @@ sudo mkdir "$userdir"
 sudo cp -Rv networking "$userdir"
 sudo cp -v setup_host.sh "$userdir"
 sudo cp -v setup_mesh.sh "$userdir"
+[[ -f autogen_hostname.sh ]] && sudo cp -v autogen_hostname.sh "$userdir" || skipping "autogen_hostname.sh"
 
 echo ""
 echo "Copying user dotfiles into user directory"
