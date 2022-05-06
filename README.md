@@ -1,175 +1,86 @@
-# UAVPi Distro Image Build (WIP)
+# UAVPi image build workflow
+Building a deployable UAVPi image is aided by the scripts and pre-defined config files in this repository. There are a few prerequesites for starting this workflow:
 
-This is an early, early version of an image build for a Raspberry Pi Zero. Purpose of this image is to build a mesh network with other UAV-enabled Pis and supply an access point to outside devices in order to relay data using a disruption-tolerant networking implementations of the Bundle Protocol 7.
-
-Steps to replicate image:
-
-
-## Set up Zero W
-
-1. Download Distro from https://www.raspberrypi.com/software/operating-systems/
-2. `sha256sum` it
-
-#### Burn image
+1. Download a suitable vanilla Raspi OS image, e.g. [2022-04-04-raspios-bullseye-armhf-lite](https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2022-04-07/2022-04-04-raspios-bullseye-armhf-lite.img.xz.torrent)
+2. Burn that image to an SD card like so:
 
 ```shell
 $ xzcat 2022-04-04-raspios-bullseye-armhf-lite.img.xz | sudo dd of=/dev/sdX bs=4M conv=fsync status=progress
 ```
 
-mount it
+3. Then clone this repository
 
-### Set up SSH and Wifi
-
-1. `cd /QQQ/boot/`
-2. `touch ssh`
-3. Enable Wifi like here: https://code.mendhak.com/prepare-raspberry-pi/
-
-```
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
-country=DE
-
-network={
-     ssid="QQQQ"
-     psk="QQQQ"
-     key_mgmt=WPA-PSK
-}
+```shell
+$ git clone git@github.com:teschmitt/UAVPi.git
+$ cd UAVPi
 ```
 
-**New way to enable SSH**: Create default user and password:
-https://www.raspberrypi.com/news/raspberry-pi-bullseye-update-april-2022/
-
+4. Edit `userconf_sample` in order to set up a custom default user. Generate the password
 ```shell
 $ openssl passwd -6
-$ [ ... enter password ...]
+  [ ... enter password ...]
 ```
 
-then copy output to `userconf`:
+then save the output to `userconf`:
 
 ```
-username:$6$PASSWORDHASH
+<username>:<PASSWORDHASH>
 ```
 
-**Note: look into the `pi_config` directory for samples and ready to use configs.
+5. The self-hosted setup steps require a wifi connection, so edit `wpa_supplicant.conf_sample` and remove the suffix.
+6. If you want to connect to the Pi via SSH, remove the suffix from `ssh_sample`. These will be copied to the `boot` partition and will be read out automagically on the Pi's first startup.
+7. `./setup_medium.sh` expects the DTN7 binaries (from the [Rust implementation](https://github.com/dtn7/dtn7-rs)) to be in a sub-directory called `dtn7-rs-release`. So please compile them with `cross build --release --target arm-unknown-linux-gnueabi` and place them there.
+8. Go and tell the `cross` maintainers what absolute MVPs they are. I'll wait.
 
+The above steps will normally only have to be done once, then you have a working environment for the following workflow.
 
-### Todo: Change hostname
-like [here](https://raspberrypi.stackexchange.com/a/114629)
-with a script
-
-umount and log in with ssh.
-
-
-## Cross build DTNd (Rust implementation)
-
-Install `cross` with favorite package manager
-then clone repo
+## Install medium setup
+If everything went well, you should have two partitions mounted and it should look something like this:
 
 ```shell
-$ git clone git@github.com:dtn7/dtn7-rs.git
+$ lsblk
+...
+sdX      8:16   1  59,5G  0 disk
+├─sdX1   8:17   1   256M  0 part /run/media/<username>/boot
+└─sdX2   8:18   1   1,7G  0 part /run/media/<username>/rootfs
 ```
 
-`cd` in there and build it:
+You can then launch the script to copy all files needed for the self-hosted setup with the details from above:
 
 ```shell
-$ cross build --release --target arm-unknown-linux-gnueabi
+$ ./setup_medium.sh --bootfs /run/media/<username>/boot --rootfs /run/media/<username>/rootfs
 ```
 
-get the bins from `./target/arm-unknown-linux-gnueabi/release` and `scp` them to the node.
+Since we're copying the DTN7 stuff into system directories, you will need to plug in your root password along the way. Don't forget to `umount` the partitions. You can now boot up the Pi (and connect to it via ssh, if you provided the adequate credentials above).
 
-Wonder in awe at the 123 MB the `dtnd` now occupies.
-
-
-## More software
-on all nodes:
-- DTNd
-
-gateway:
-- dnsmasq
-
-
-## Mesh stuff
-https://www.iottrends.tech/blog/diy-how-to-create-a-home-mesh-wifi-using-raspberry-pi/
-https://www.open-mesh.org/projects/batman-adv/wiki
-
-Nice docs:
-https://www.open-mesh.org/doc/batman-adv/index.html
-
-How to use the `batctl` tool:
-https://www.open-mesh.org/doc/batman-adv/Understand-your-batman-adv-network.html
-
-
-## B.A.T.M.A.N. Advanced setup
-
-Follow these tutorials:
-1. https://github.com/binnes/WiFiMeshRaspberryPi or
-2. https://medium.com/@tdoll/how-to-setup-a-raspberry-pi-ad-hoc-network-using-batman-adv-on-raspbian-stretch-lite-dce6eb896687
-
-or there's one on the official `batman-adv` pages especially for Debian:
-https://www.open-mesh.org/doc/batman-adv/Debian_batman-adv_AutoStartup.html
-
-basically:
+In order to install all needed software, run
 
 ```shell
-$ sudo apt install -y batctl
-$ cd ~ && touch start-batman-adv.sh && chmod +x start-batman-adv.sh
-$ nano start-batman-adv.sh
+$ ./setup_host.sh
 ```
 
-the contents should be:
+This may take a while. When it's done you should see
 
-```bash
-#!/bin/bash
-# batman-adv interface to use
-sudo batctl if add wlan0
-# sudo ifconfig bat0 mtu 1468
-
-# Tell batman-adv this is a gateway client
-# sudo batctl gw_mode client
-
-# Activates batman-adv interfaces
-sudo ifconfig wlan0 up
-sudo ifconfig bat0 up
+```
+Setup finished, you can now run the setup_mesh.sh script.
 ```
 
-then:
+So do that:
 
 ```shell
-$ sudo touch /etc/network/interfaces.d/wlan0
-$ sudo touch /etc/network/interfaces.d/bat0
+$ ./setup_mesh.sh
 ```
 
-with content:
+This will actually muck around in the network configurations and set up all interfaces needed by `batman-adv`. If you want to change any of the used options, check the `networking` directory for the appropriate files.
 
-```
-auto wlan0
-iface wlan0 inet manual
-    mtu 1532 # Increase packet size to account for batman-adv header
-    wireless-channel 1 # Any channel from 1-14
-    wireless-essid my-ad-hoc-network # Your network name here
-    wireless-mode ad-hoc
-    wireless-ap 02:12:34:56:78:9A # This pre-sets your CELL id
-```
+## Create and shrink an image
+Now for the most important part: creating the image:
 
-and
-
-```
-auto bat0
-iface bat0 inet auto
-    pre-up /usr/sbin/batctl if add wlan0
-```
-
-Finally:
+1. Power down the Pi and remove the SD card. Mount it on the workstation
+2. Fire up the `create_image.sh` script (this will also require your `sudo` credentials, so have those handy):
 
 ```shell
-# Have batman-adv startup automatically on boot
-$ echo 'batman-adv' | sudo tee --append /etc/modules# Prevent DHCPCD from automatically configuring wlan0, THIS IS KEY
-$ echo 'denyinterfaces wlan0' | sudo tee --append /etc/dhcpcd.conf# Enable interfaces on boot
-$ echo "$(pwd)/start-batman-adv.sh" >> ~/.bashrc
+$ ./create_image.sh /dev/sdX imagename.img
 ```
 
-### Create one entry point node (EPN)
-https://www.open-mesh.org/doc/batman-adv/Quick-start-guide.html#mixing-non-b-a-t-m-a-n-systems-with-batman-adv
-
-### Create and shrink the image
-https://opensource.com/article/21/7/custom-raspberry-pi-image
+This will take a while, but you'll have a ready to deploy image when it's done.
