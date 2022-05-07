@@ -87,6 +87,7 @@ cp -v userconf "$fs_boot"
 [[ -f ssh ]]            && cp -v ssh "$fs_boot"         || skipping "ssh"
 [[ -f config.txt ]]     && cp -v config.txt "$fs_boot"  || skipping "config.txt"
 [[ -f wpa_supplicant.conf ]]&& cp -v wpa_supplicant.conf "$fs_boot"|| skipping "wpa_supplicant.conf"
+[[ -f keyboard ]]       && cp -v keyboard "$fs_boot"    || skipping "keyboard"
 
 
 echo "Parsing username from userconf ..."
