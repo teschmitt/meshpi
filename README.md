@@ -4,7 +4,7 @@
 Building a deployable UAVPi image is aided by the scripts and pre-defined config files in this repository. There are a few prerequesites for starting this workflow:
 
 1. Download a suitable vanilla Raspi OS image, e.g. [2022-04-04-raspios-bullseye-armhf-lite](https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2022-04-07/2022-04-04-raspios-bullseye-armhf-lite.img.xz.torrent)
-2. Burn that image to an SD card like so:
+2. Flash that image to an SD card like so:
 
 ```shell
 $ xzcat 2022-04-04-raspios-bullseye-armhf-lite.img.xz | sudo dd of=/dev/sdX bs=4M conv=fsync status=progress

@@ -91,9 +91,9 @@ cp -v userconf "$fs_boot"
 
 
 echo "Parsing username from userconf ..."
-username=$(sed -nr '1s/^([^:]+).*/\1/p' userconf)
-[[ -z "$username" ]] && die "Was not able to parse username in userconf"
-echo "  -> got '$username'"
+pi_username=$(sed -nr '1s/^([^:]+).*/\1/p' userconf)
+[[ -n "$pi_username" ]] || die "Was not able to parse username in userconf"
+echo "  -> got '$pi_username'"
 cd ..
 
 
@@ -110,21 +110,24 @@ cd ..
 
 echo ""
 echo "Copying files for self-hosted setup into user directory"
-userdir="$fs_root/home/$username"
+userdir="$fs_root/home/$pi_username"
+local_username=$(whoami)
+cur_group=$(id -gn)
 sudo mkdir "$userdir"
-sudo cp -Rv networking "$userdir"
-sudo cp -v setup_host.sh "$userdir"
-sudo cp -v setup_mesh.sh "$userdir"
-[[ -f autogen_hostname.sh ]] && sudo cp -v autogen_hostname.sh "$userdir" || skipping "autogen_hostname.sh"
+sudo chown $local_username:$cur_group "$userdir"
+cp -Rv networking "$userdir"
+cp -v setup_host.sh "$userdir"
+cp -v setup_mesh.sh "$userdir"
+[[ -f autogen_hostname.sh ]] && cp -v autogen_hostname.sh "$userdir" || skipping "autogen_hostname.sh"
 
 echo ""
 echo "Copying user dotfiles into user directory"
 if [[ -d "dotfiles" ]]
 then
     cd dotfiles
-    sudo cp -v .bash_logout "$userdir"
-    sudo cp -v .bashrc "$userdir"
-    sudo cp -v .profile "$userdir"
+    cp -v .bash_logout "$userdir"
+    cp -v .bashrc "$userdir"
+    cp -v .profile "$userdir"
 else
     skipping "dotfiles"
 fi
@@ -134,5 +137,5 @@ cd ..
 echo ""
 cd "$pwd"
 echo "Setup finished, you can now unmount the partitions and boot up the Pi."
-echo "Then run the setup_host.sh script in the /home/$username directory."
+echo "Then run the setup_host.sh script in the /home/$pi_username directory."
 echo "Have a fantastic day!"
