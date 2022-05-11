@@ -2,5 +2,7 @@
 pi_config/ssh
 pi_config/userconf
 pi_config/wpa_supplicant.conf
+networking/hostapd.conf
 dtn7-*/
 *.img
+*.img.xz
