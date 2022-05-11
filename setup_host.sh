@@ -7,7 +7,8 @@ usage() {
     echo ""
     echo "Usage: $(basename "$0")"
     echo ""
-    echo "  -h|--help           show this message"
+    echo "  -a | --ap-mode          setup this node as an access point"
+    echo "  -h | --help             show this message"
     echo ""
 }
 
@@ -25,10 +26,27 @@ pwd=$(pwd)
 mac=$(cat /sys/class/net/wlan0/address)
 [[ $(echo $mac | grep -o ^........ | grep -i "B8:27:EB") ]] || die "Please run this on a RPi node, not anywhere else."
 
+is_ap=""
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -a|--ap-mode)   is_ap="yes" ;;
+        -h|--help)      usage; exit 0 ;;
+        *)              die "Unkown parameter $1"
+    esac
+    shift
+done
+
+if [[ -n $is_ap ]]; then
+    echo "-------------------------------------------"
+    echo "Setting this node up to be an access point."
+    echo "Please look up SSID and password in"
+    echo "/etc/hostapd/wlan1.conf"
+    echo "-------------------------------------------"
+fi
 
 # check for all mandatory directories and files
 dirs_exist="networking"
-files_exist="networking/bat0 networking/wlan0 networking/start-batman-adv.sh"
+files_exist="networking/start-batman-adv.sh"
 for dir in $dirs_exist; do
     [[ -d "$dir" ]] || die "directory '$dir' not found"
 done
@@ -54,7 +72,11 @@ if [[ online -eq 0 ]]; then
     echo "Updating system and installing software ..."
     sudo apt update
     sudo apt -y upgrade
-    sudo apt -y install batctl
+    if [[ -z $is_ap ]]; then
+        sudo apt -y install batctl
+    else
+        sudo DEBIAN_FRONTEND=noninteractive apt install -y batctl hostapd dnsmasq netfilter-persistent iptables-persistent
+    fi
 else
     die "no network connection, please check network configuration"
 fi

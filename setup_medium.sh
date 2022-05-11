@@ -11,9 +11,9 @@ usage() {
     echo ""
     echo "Usage: $(basename "$0") --bootfs PATH --rootfs PATH"
     echo ""
-    echo "  -b|--bootfs PATH    path to the boot filesystem on the mounted installation medium"
-    echo "  -r|--rootfs PATH    path to the rootfs filesystem on the mounted installation medium"
-    echo "  -h|--help           show this message"
+    echo "  -b | --bootfs PATH      path to the boot filesystem on the mounted installation medium"
+    echo "  -r | --rootfs PATH      path to the rootfs filesystem on the mounted installation medium"
+    echo "  -h | --help             show this message"
     echo ""
 }
 
@@ -59,13 +59,12 @@ fi
 # check for all mandatory directories and files
 echo ""
 echo "Checking if all necessary directories and files are accessible ..."
-rel="dtn7-rs-release"
-dirs_exist="pi_config $rel networking"
+dirs_exist="pi_config dtn7-rs-release networking"
 files_exist="
     setup_host.sh setup_mesh.sh
     pi_config/userconf
-    $rel/dtnd $rel/dtnquery $rel/dtnsend $rel/dtnrecv $rel/dtntrigger
-    networking/bat0 networking/wlan0 networking/start-batman-adv.sh"
+    dtn7-rs-release/dtnd dtn7-rs-release/dtnquery dtn7-rs-release/dtnsend dtn7-rs-release/dtnrecv dtn7-rs-release/dtntrigger
+    networking/hostapd.conf networking/routed-ap.conf networking/wlan0 networking/start-batman-adv.sh"
 x_flag="setup_host.sh setup_mesh.sh networking/start-batman-adv.sh"
 for dir in $dirs_exist; do
     [[ -d "$dir" ]] || die "directory '$dir' not found"
@@ -87,7 +86,6 @@ cp -v userconf "$fs_boot"
 [[ -f ssh ]]            && cp -v ssh "$fs_boot"         || skipping "ssh"
 [[ -f config.txt ]]     && cp -v config.txt "$fs_boot"  || skipping "config.txt"
 [[ -f wpa_supplicant.conf ]]&& cp -v wpa_supplicant.conf "$fs_boot"|| skipping "wpa_supplicant.conf"
-[[ -f keyboard ]]       && cp -v keyboard "$fs_boot"    || skipping "keyboard"
 
 
 echo "Parsing username from userconf ..."
@@ -109,6 +107,11 @@ cd ..
 
 
 echo ""
+echo "Switching keyboard layout to 'de' ..."
+[[ -f pi_config/keyboard ]] && sudo cp -v pi_config/keyboard "$fs_root/etc/default/keyboard" || skipping "keyboard"
+
+
+echo ""
 echo "Copying files for self-hosted setup into user directory"
 userdir="$fs_root/home/$pi_username"
 local_username=$(whoami)
@@ -119,6 +122,7 @@ cp -Rv networking "$userdir"
 cp -v setup_host.sh "$userdir"
 cp -v setup_mesh.sh "$userdir"
 [[ -f autogen_hostname.sh ]] && cp -v autogen_hostname.sh "$userdir" || skipping "autogen_hostname.sh"
+[[ -f show_network_drivers.sh ]] && cp -v show_network_drivers.sh "$userdir" || skipping "show_network_drivers.sh"
 
 echo ""
 echo "Copying user dotfiles into user directory"
